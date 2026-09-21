@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import os
 import re
 import shutil
 import subprocess
@@ -473,12 +474,32 @@ def _convert_with_word(docx_path: Path, pdf_path: Path) -> None:
         pythoncom.CoUninitialize()
 
 
+def _find_libreoffice() -> str | None:
+    candidates = [
+        shutil.which("soffice"),
+        shutil.which("libreoffice"),
+        "/usr/bin/soffice",
+        "/usr/bin/libreoffice",
+        "/usr/lib/libreoffice/program/soffice",
+        "/snap/bin/libreoffice",
+    ]
+    for path in candidates:
+        if path and Path(path).exists():
+            return path
+    return None
+
+
 def _convert_with_libreoffice(docx_path: Path, pdf_path: Path) -> None:
-    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    soffice = _find_libreoffice()
     if not soffice:
         raise RuntimeError(
             "LibreOffice is required on this server. Run: sudo apt install -y libreoffice"
         )
+
+    profile = Path("/tmp/lo-profile-mallika")
+    profile.mkdir(parents=True, exist_ok=True)
+    env = os.environ.copy()
+    env["HOME"] = "/home/ubuntu"
 
     result = subprocess.run(
         [
@@ -486,6 +507,7 @@ def _convert_with_libreoffice(docx_path: Path, pdf_path: Path) -> None:
             "--headless",
             "--nologo",
             "--nofirststartwizard",
+            f"-env:UserInstallation=file://{profile.as_posix()}",
             "--convert-to",
             "pdf:writer_pdf_Export",
             "--outdir",
@@ -496,6 +518,7 @@ def _convert_with_libreoffice(docx_path: Path, pdf_path: Path) -> None:
         capture_output=True,
         text=True,
         timeout=180,
+        env=env,
     )
     produced = pdf_path.parent / f"{docx_path.stem}.pdf"
     if result.returncode != 0 or not produced.exists():

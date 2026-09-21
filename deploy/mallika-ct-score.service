@@ -6,7 +6,8 @@ After=network.target
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/mallika-ct-score/mallika-ct-score
-Environment=PATH=/home/ubuntu/mallika-ct-score/mallika-ct-score/.venv/bin
+Environment=HOME=/home/ubuntu
+Environment=PATH=/home/ubuntu/mallika-ct-score/mallika-ct-score/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
 ExecStart=/home/ubuntu/mallika-ct-score/mallika-ct-score/.venv/bin/python3 app.py
 Restart=always
 RestartSec=3
