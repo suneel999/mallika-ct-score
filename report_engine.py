@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import io
 import re
+import shutil
+import subprocess
+import sys
 import threading
 import zipfile
 from pathlib import Path
@@ -403,15 +406,27 @@ def fill_template(data: dict[str, str], image_file: BinaryIO | None, dest_docx: 
 
 
 def convert_docx_to_pdf(docx_path: Path, pdf_path: Path) -> None:
-    """Print the filled DOCX through Microsoft Word (installed on this machine)."""
-    import pythoncom
-    import win32com.client
-
+    """Convert the filled DOCX to PDF. Word on Windows, LibreOffice on Linux."""
     docx_path = Path(docx_path).resolve()
     pdf_path = Path(pdf_path).resolve()
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
     if pdf_path.exists():
         pdf_path.unlink()
+
+    if sys.platform.startswith("win"):
+        try:
+            _convert_with_word(docx_path, pdf_path)
+            return
+        except Exception:
+            if pdf_path.exists():
+                return
+
+    _convert_with_libreoffice(docx_path, pdf_path)
+
+
+def _convert_with_word(docx_path: Path, pdf_path: Path) -> None:
+    import pythoncom
+    import win32com.client
 
     pythoncom.CoInitialize()
     word = None
@@ -427,7 +442,6 @@ def convert_docx_to_pdf(docx_path: Path, pdf_path: Path) -> None:
                 AddToRecentFiles=False,
                 Visible=False,
             )
-            # 17 = wdExportFormatPDF, 0 = wdExportOptimizeForPrint
             document.ExportAsFixedFormat(
                 OutputFileName=str(pdf_path),
                 ExportFormat=17,
@@ -457,6 +471,38 @@ def convert_docx_to_pdf(docx_path: Path, pdf_path: Path) -> None:
             except Exception:
                 pass
         pythoncom.CoUninitialize()
+
+
+def _convert_with_libreoffice(docx_path: Path, pdf_path: Path) -> None:
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        raise RuntimeError(
+            "LibreOffice is required on this server. Run: sudo apt install -y libreoffice"
+        )
+
+    result = subprocess.run(
+        [
+            soffice,
+            "--headless",
+            "--nologo",
+            "--nofirststartwizard",
+            "--convert-to",
+            "pdf:writer_pdf_Export",
+            "--outdir",
+            str(pdf_path.parent),
+            str(docx_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    produced = pdf_path.parent / f"{docx_path.stem}.pdf"
+    if result.returncode != 0 or not produced.exists():
+        detail = (result.stderr or result.stdout or "").strip()
+        raise RuntimeError(f"LibreOffice PDF conversion failed. {detail}")
+    if produced.resolve() != pdf_path.resolve():
+        produced.replace(pdf_path)
 
 
 def verify_pdf(pdf_path: Path) -> dict:
