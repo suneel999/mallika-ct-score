@@ -1,0 +1,15 @@
+[Unit]
+Description=Mallika CT Calcium Score Report
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/mallika-ct-score/mallika-ct-score
+Environment=PATH=/home/ubuntu/mallika-ct-score/mallika-ct-score/.venv/bin
+ExecStart=/home/ubuntu/mallika-ct-score/mallika-ct-score/.venv/bin/python3 app.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
