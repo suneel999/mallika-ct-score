@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CT Coronary Calcium Score Report</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Mallika Hospitals</p>
+        <h1>CT Coronary Calcium Score Report</h1>
+        <p class="subtitle">Fill the patient details. The original report template is used unchanged.</p>
+      </div>
+      <button type="button" class="ghost-btn" id="load-sample">Load sample data</button>
+    </header>
+
+    <div class="layout">
+      <form id="report-form" class="report-form" novalidate>
+        <section class="card">
+          <h2>Patient Details</h2>
+          <div class="grid">
+            <label>Patient Name <span>*</span>
+              <input type="text" name="name" required autocomplete="off">
+            </label>
+            <label>Patient ID <span>*</span>
+              <input type="text" name="id" required autocomplete="off">
+            </label>
+            <label>Age <span>*</span>
+              <input type="number" name="age" min="1" max="120" step="1" required>
+            </label>
+            <label>Referring Doctor <span>*</span>
+              <input type="text" name="ref" required>
+            </label>
+            <label>Scan Date <span>*</span>
+              <input type="date" name="s_date" required>
+            </label>
+            <label>Report Date <span>*</span>
+              <input type="date" name="r_date" required>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Calcium Score</h2>
+          <div class="grid">
+            <label>Total Coronary Calcium Score <span>*</span>
+              <input type="number" name="score" min="0" step="0.01" required>
+            </label>
+            <label>Percentile Start
+              <input type="text" name="start" placeholder="0">
+            </label>
+            <label>Percentile End
+              <input type="text" name="end" placeholder="10">
+            </label>
+            <label>Estimated Risk
+              <input type="text" name="risk" id="risk" placeholder="Auto from score">
+              <small>Auto-filled from the score. You can override it.</small>
+            </label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Calcium Distribution</h2>
+          <label class="check-row">
+            <input type="checkbox" name="auto_total" id="auto-total" checked>
+            Calculate Total Score Automatically
+          </label>
+          <div class="grid">
+            <label>Left Main (LM) <span>*</span>
+              <input type="number" name="lm" class="vessel" min="0" step="0.01" required>
+            </label>
+            <label>Left Anterior Descending (LAD) <span>*</span>
+              <input type="number" name="lad" class="vessel" min="0" step="0.01" required>
+            </label>
+            <label>Left Circumflex (LCX) <span>*</span>
+              <input type="number" name="lcx" class="vessel" min="0" step="0.01" required>
+            </label>
+            <label>Right Coronary Artery (RCA) <span>*</span>
+              <input type="number" name="rca" class="vessel" min="0" step="0.01" required>
+            </label>
+            <label>Total Score
+              <input type="number" name="total" id="total" min="0" step="0.01">
+            </label>
+          </div>
+          <p class="warn" id="total-warning" hidden></p>
+          <button type="button" class="secondary-btn" id="calc-total">Calculate Total</button>
+        </section>
+
+        <section class="card">
+          <h2>CT Image</h2>
+          <label class="file-label">
+            CT Coronary Calcium Image <span>*</span>
+            <input type="file" name="image" id="image" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
+          </label>
+          <div class="image-preview" id="image-preview" hidden>
+            <img id="image-preview-el" alt="Uploaded CT preview">
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Reporting Details</h2>
+          <div class="grid">
+            <label>Reported By <span>*</span>
+              <input type="text" name="reportedby" required>
+            </label>
+            <label>Qualification
+              <input type="text" name="qual" placeholder="DNB Radiodiagnosis">
+            </label>
+            <label>Designation
+              <input type="text" name="des" placeholder="Consultant Radiologist">
+            </label>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button type="button" class="secondary-btn" id="preview-btn">Preview Report</button>
+          <button type="submit" class="primary-btn" id="generate-btn">Generate PDF</button>
+        </div>
+        <p class="status" id="status" hidden></p>
+      </form>
+
+      <aside class="preview-pane">
+        <div class="preview-toolbar">
+          <h2>Report Preview</h2>
+          <a class="download-link" id="download-link" hidden>Download PDF</a>
+        </div>
+        <iframe id="preview-frame" title="Filled report preview" hidden></iframe>
+        <div class="preview-empty" id="preview-empty">
+          The filled original template will appear here after you click Preview Report or Generate PDF.
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+generated/*
+!generated/.gitkeep
+static/uploads/*
+!static/uploads/.gitkeep
+extract_tmp/
+__pycache__/
+*.pyc
+.venv/
+.~*
+~$*
+~WRL*.tmp
+*.tmp
+.DS_Store
